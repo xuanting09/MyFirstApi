@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 產品後端管理系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; margin-bottom: 2rem; }
+        /* 讓警告框有輕微閃爍感，更吸睛 */
+        .alert-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bg text-center">
+        <h1>🚀 後端 API 實戰成果</h1>
+        <p>C# .NET Core + Bootstrap 整合演示</p>
+    </div>
+
+    <div class="container">
+        <div id="alert-zone" class="alert alert-danger d-none alert-pulse mb-4" role="alert">
+            <h4 class="alert-heading">⚠️ 庫存不足警告！</h4>
+            <p>以下產品庫存已低於警戒門檻，請儘速處理：</p>
+            <hr>
+            <ul id="low-stock-list" class="mb-0">
+                </ul>
+        </div>
+
+         <div class="mb-4 p-3 border rounded bg-light">
+        <h6>➕ 新增產品</h6>
+        <div class="row g-2">
+            <div class="col"><input id="newName" type="text" class="form-control" placeholder="名稱"></div>
+            <div class="col"><input id="newPrice" type="number" class="form-control" placeholder="價格"></div>
+            <div class="col"><input id="newStock" type="number" class="form-control" placeholder="庫存"></div>
+            <div class="col"><input id="newThreshold" type="number" class="form-control" placeholder="門檻"></div>
+            <div class="col-auto"><button class="btn btn-success" onclick="addProduct()">送出</button></div>
+        </div>
+    </div>
+    <div class="mb-4 p-3 border rounded bg-white shadow-sm">
+        <h6 class="text-primary">🔍 查詢與快速修改 (根據編號)</h6>
+        <div class="row g-2">
+            <div class="col-md-2">
+                <input id="searchId" type="number" class="form-control" placeholder="輸入 ID">
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-primary" onclick="searchProduct()">查詢</button>
+            </div>
+        </div>
+        <div id="edit-form" class="row g-2 mt-2 d-none">
+            <div class="col"><input id="editName" type="text" class="form-control" readonly></div>
+            <div class="col"><input id="editPrice" type="number" class="form-control" placeholder="價格"></div>
+            <div class="col"><input id="editStock" type="number" class="form-control" placeholder="庫存"></div>
+            <div class="col-auto">
+                <button class="btn btn-warning" onclick="updateProduct()">確認修改</button>
+            </div>
+        </div>
+    </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card p-4">
+                    <h4 class="mb-4">產品管理儀表板</h4>
+                    <button class="btn btn-primary mb-3" onclick="fetchProducts()">重新整理資料</button>
+                    
+                    <h5 class="text-secondary small fw-bold">高單價產品分析 (Price > 5000)</h5>
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>產品名稱</th>
+                                <th>價格</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+
+    <script>
+        // 新增產品並清空輸入框
+        async function addProduct() {
+            const nameEl = document.getElementById('newName');
+            const priceEl = document.getElementById('newPrice');
+            const stockEl = document.getElementById('newStock');
+            const thresholdEl = document.getElementById('newThreshold');
+
+            const product = {
+                id: 0,
+                name: nameEl.value,
+                price: parseFloat(priceEl.value),
+                stock: parseInt(stockEl.value),
+                minThreshold: parseInt(thresholdEl.value),
+                category: "通用"
+            };
+
+            await fetch('/api/Product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            });
+
+            // 清空輸入框
+            nameEl.value = '';
+            priceEl.value = '';
+            stockEl.value = '';
+            thresholdEl.value = '';
+
+            fetchProducts();
+        }
+
+        // 根據 ID 查詢產品
+        async function searchProduct() {
+            const id = document.getElementById('searchId').value;
+            const res = await fetch(`/api/Product/${id}`);
+            
+            if (res.ok) {
+                const p = await res.json();
+                document.getElementById('edit-form').classList.remove('d-none');
+                document.getElementById('editName').value = p.name;
+                document.getElementById('editPrice').value = p.price;
+                document.getElementById('editStock').value = p.stock;
+            } else {
+                alert("找不到該編號的產品");
+                document.getElementById('edit-form').classList.add('d-none');
+            }
+        }
+
+        // 3. 送出修改後的資料
+        async function updateProduct() {
+            const idEl = document.getElementById('searchId');
+            const id = idEl.value;
+            
+            // 這裡要對應你後端 Product 類別的欄位名稱
+            const product = {
+                stock: parseInt(document.getElementById('editStock').value),
+                price: parseFloat(document.getElementById('editPrice').value)
+            };
+
+            const res = await fetch(`/api/Product/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            });
+
+            if (res.ok) {
+                alert("更新成功！");
+                
+                // 1. 清空搜尋 ID 欄位
+                idEl.value = '';
+                
+                // 2. 隱藏編輯表單
+                document.getElementById('edit-form').classList.add('d-none');
+                
+                // 3. 重新整理下方清單與警報
+                fetchProducts();
+            } else {
+                alert("更新失敗，請檢查資料格式");
+            }
+        }
+
+        // 補貨功能 (簡單示範更新)
+        async function restock(id, currentStock) {
+            await fetch(`/api/Product/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock: currentStock + 10 }) // 每次補 10 個
+            });
+            fetchProducts();
+        }
+        async function fetchProducts() {
+            try {
+                // 1. 抓取高單價產品 (原本的功能)
+                const resAnalyze = await fetch('/api/Product/analyze');
+                const dataAnalyze = await resAnalyze.json();
+                const list = document.getElementById('product-list');
+                list.innerHTML = '';
+                dataAnalyze.forEach(p => {
+                    list.innerHTML += `<tr><td>${p.name}</td><td class="text-danger font-weight-bold">$${p.price.toLocaleString()}</td></tr>`;
+                });
+
+                // 2. 抓取低庫存產品 (新開發的功能)
+                const resLow = await fetch('/api/Product/low-stock');
+                const dataLow = await resLow.json();
+                
+                const alertZone = document.getElementById('alert-zone');
+                const lowStockList = document.getElementById('low-stock-list');
+
+                if (dataLow.length > 0) {
+                    alertZone.classList.remove('d-none'); // 顯示紅色區塊
+                    lowStockList.innerHTML = '';
+                    dataLow.forEach(p => {
+                        lowStockList.innerHTML += `<li><strong>${p.name}</strong> (目前庫存: <span class="badge bg-dark">${p.stock}</span> / 預警門檻: ${p.minThreshold})</li>`;
+                    });
+                } else {
+                    alertZone.classList.add('d-none'); // 隱藏紅色區塊
+                }
+            } catch (error) {
+                console.error("抓取 API 失敗:", error);
+            }
+        }
+        
+        // 初始載入
+        fetchProducts();
+    </script>
+</body>
+</html>

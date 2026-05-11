@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "QjtuBU79VPz50eVP9tr4Txe/BhVWfrFM4sxCD6ipdTM=",
+  "Source": "MyFirstApi",
+  "BasePath": "_content/MyFirstApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "MyFirstApi/wwwroot",
+      "Source": "MyFirstApi",
+      "ContentRoot": "/Users/user/cseun-learn/MyFirstApi/wwwroot/",
+      "BasePath": "_content/MyFirstApi",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/Users/user/cseun-learn/MyFirstApi/wwwroot/index.html",
+      "SourceId": "MyFirstApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/user/cseun-learn/MyFirstApi/wwwroot/",
+      "BasePath": "_content/MyFirstApi",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/index.html"
+    }
+  ]
+}
